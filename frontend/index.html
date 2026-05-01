@@ -1,0 +1,2695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>果感知·智选助手 - 农业机器人传感器实时选型与验证引擎</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-cyan: #00d9ff;
+            --primary-green: #00ff88;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --bg-dark: #0a0a1a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(0, 217, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 60%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+        
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-1%, 1%) rotate(-1deg); }
+        }
+        
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary-cyan);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+        
+        .shape-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary-green);
+            bottom: 10%;
+            left: -50px;
+            animation-delay: -5s;
+        }
+        
+        .shape-3 {
+            width: 250px;
+            height: 250px;
+            background: var(--accent-purple);
+            top: 40%;
+            right: 10%;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        header {
+            text-align: center;
+            padding: 60px 0 40px;
+            position: relative;
+        }
+        
+        .user-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(0, 217, 255, 0.5);
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 320px;
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.98), rgba(10, 10, 26, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+        }
+        
+        .dropdown-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .dropdown-user-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .dropdown-user-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .dropdown-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(0, 217, 255, 0.1);
+        }
+        
+        .dropdown-item-icon {
+            font-size: 18px;
+        }
+        
+        .dropdown-section-title {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 15px 15px 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.98), rgba(10, 10, 26, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .modal-close {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 95, 86, 0.5);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .form-select option {
+            background: #1a1a2e;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            color: #000;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .data-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .data-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .data-item-icon {
+            font-size: 20px;
+        }
+        
+        .data-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .data-item-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .data-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .data-item-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .data-item-btn:hover {
+            background: rgba(0, 217, 255, 0.2);
+            color: var(--primary-cyan);
+        }
+        
+        .data-item-btn.delete:hover {
+            background: rgba(255, 95, 86, 0.2);
+            color: #ff5f56;
+        }
+        
+        .history-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .history-item:hover {
+            background: rgba(0, 217, 255, 0.1);
+            border-color: rgba(0, 217, 255, 0.3);
+        }
+        
+        .history-query {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .export-section {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .export-option {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-option:hover {
+            border-color: var(--primary-cyan);
+            background: rgba(0, 217, 255, 0.1);
+        }
+        
+        .export-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .export-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .empty-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(0, 255, 136, 0.15));
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--primary-cyan);
+            margin-bottom: 25px;
+            animation: fadeInDown 0.8s ease;
+        }
+        
+        .hero-badge::before {
+            content: '⚡';
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--primary-green) 50%, var(--accent-purple) 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.3);
+            animation: logoFloat 4s ease-in-out infinite, fadeInUp 0.8s ease 0.2s both;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+            animation: shine 3s ease-in-out infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            font-size: 3.2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-cyan) 50%, var(--primary-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.25em;
+            margin-top: 12px;
+            font-weight: 300;
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+        
+        .search-section {
+            position: relative;
+            margin: 50px 0;
+            animation: fadeInUp 0.8s ease 0.8s both;
+        }
+        
+        .search-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 35px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .search-input-wrapper {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 350px;
+            padding: 22px 30px;
+            font-size: 17px;
+            border: 2px solid var(--border-subtle);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            outline: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-cyan);
+            box-shadow: 
+                0 0 0 4px rgba(0, 217, 255, 0.15),
+                0 20px 50px rgba(0, 217, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .search-btn {
+            padding: 22px 50px;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--primary-green) 100%);
+            color: #000;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .search-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 217, 255, 0.4);
+        }
+        
+        .search-btn:hover::before {
+            left: 100%;
+        }
+        
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples {
+            margin-top: 25px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .examples-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .example-tag {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 50px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .example-tag:hover {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(0, 255, 136, 0.15));
+            border-color: var(--primary-cyan);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s ease both;
+        }
+        
+        .result-card:hover {
+            border-color: rgba(0, 217, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .recommendation-card {
+            border-left: 4px solid var(--primary-cyan);
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        }
+        
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .recommendation-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--primary-cyan);
+        }
+        
+        .match-badge {
+            padding: 8px 18px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.1));
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+        
+        .sensor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin: 25px 0;
+        }
+        
+        .sensor-item {
+            display: flex;
+            gap: 18px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+        
+        .sensor-item:hover {
+            background: rgba(0, 217, 255, 0.05);
+            border-color: rgba(0, 217, 255, 0.2);
+        }
+        
+        .sensor-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #6366f1 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
+        }
+        
+        .sensor-info {
+            flex: 1;
+        }
+        
+        .sensor-model {
+            font-size: 1.15em;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        
+        .sensor-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+        
+        .sensor-specs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .spec-tag {
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .sensor-price {
+            margin-top: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-green);
+        }
+        
+        .rationale-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.08) 0%, rgba(0, 255, 136, 0.03) 100%);
+            border-radius: 14px;
+            border-left: 3px solid var(--primary-cyan);
+        }
+        
+        .rationale-title {
+            font-size: 14px;
+            color: var(--primary-cyan);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .rationale-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .test-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .test-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        
+        .test-item {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(0, 217, 255, 0.08));
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--primary-cyan);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+        }
+        
+        .test-standard, .test-equipment {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 10px;
+        }
+        
+        .test-standard span, .test-equipment span {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .purchase-section {
+            margin-top: 20px;
+        }
+        
+        .vendor-info {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .vendor-item {
+            flex: 1;
+            min-width: 220px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        .vendor-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 6px;
+        }
+        
+        .vendor-contact {
+            font-size: 14px;
+            color: var(--primary-green);
+        }
+        
+        .case-info {
+            margin-top: 18px;
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.03) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 14px;
+        }
+        
+        .case-title {
+            font-size: 14px;
+            color: var(--primary-green);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .case-detail {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sidebar-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-card:hover {
+            border-color: rgba(0, 217, 255, 0.2);
+        }
+        
+        .sidebar-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stats-card {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            background: rgba(0, 217, 255, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+        }
+        
+        .realtime-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%);
+        }
+        
+        .realtime-loading {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .realtime-empty {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .realtime-empty-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+        
+        .price-section, .bid-section, .news-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .price-title { color: var(--primary-green); }
+        .bid-title { color: var(--accent-orange); }
+        .news-title { color: var(--primary-cyan); }
+        
+        .realtime-item {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .realtime-item:hover {
+            background: rgba(0, 0, 0, 0.3);
+            transform: translateX(5px);
+        }
+        
+        .item-title {
+            font-size: 13px;
+            color: #fff;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        
+        .item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .item-price {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+        
+        .item-customer {
+            color: var(--accent-orange);
+        }
+        
+        .item-source {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .evidence-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .evidence-a { background: rgba(0, 255, 136, 0.2); color: var(--primary-green); }
+        .evidence-b { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); }
+        .evidence-c { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
+        
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .empty-icon {
+            font-size: 70px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .decision-tree {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .decision-tree-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        
+        .decision-tree-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .decision-tree-toggle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .decision-content {
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .decision-query {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            padding: 12px 15px;
+            background: rgba(0, 217, 255, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid var(--primary-cyan);
+        }
+        
+        .decision-step {
+            margin-bottom: 20px;
+            padding-left: 20px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .decision-step-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .decision-step-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            background: rgba(0, 217, 255, 0.15);
+            border-radius: 4px;
+            color: var(--primary-cyan);
+        }
+        
+        .candidate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .candidate-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .candidate-item.selected {
+            border-color: var(--primary-green);
+            background: rgba(0, 255, 136, 0.08);
+        }
+        
+        .candidate-info {
+            flex: 1;
+        }
+        
+        .candidate-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .candidate-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .candidate-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        
+        .badge-a { background: rgba(0, 255, 136, 0.2); color: var(--primary-green); }
+        .badge-b { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); }
+        .badge-c { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
+        
+        .candidate-reason {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+        
+        .final-result {
+            margin-top: 25px;
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 217, 255, 0.05));
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        
+        .final-result-title {
+            font-size: 13px;
+            color: var(--primary-green);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .final-sensors {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .final-sensor-tag {
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .action-btn:hover {
+            background: rgba(0, 217, 255, 0.15);
+            border-color: var(--primary-cyan);
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            color: #000;
+            border: none;
+        }
+        
+        .action-btn.primary:hover {
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+        
+        .explore-btn {
+            padding: 12px 20px;
+            border-radius: 12px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #a855f7;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .explore-btn:hover {
+            background: rgba(168, 85, 247, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .explore-modal .modal-content {
+            max-width: 900px;
+        }
+        
+        .explore-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .explore-form .form-group {
+            margin-bottom: 0;
+        }
+        
+        .checkbox-group, .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .checkbox-item, .radio-item {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+        
+        .checkbox-item:hover, .radio-item:hover {
+            background: rgba(0, 217, 255, 0.1);
+        }
+        
+        .checkbox-item.checked, .radio-item.checked {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: var(--primary-cyan);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .comparison-table th {
+            background: rgba(0, 0, 0, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+        
+        .comparison-table td {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .comparison-table tr:hover td {
+            background: rgba(0, 217, 255, 0.05);
+        }
+        
+        .compare-select-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 6px;
+            color: #a855f7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .compare-select-btn:hover {
+            background: rgba(168, 85, 247, 0.3);
+        }
+        
+        .compare-select-btn.selected {
+            background: var(--primary-green);
+            color: #000;
+            border-color: var(--primary-green);
+        }
+        
+        .comparison-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        .comparison-section h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: var(--primary-cyan);
+        }
+        
+        .email-template {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 13px;
+            line-height: 1.8;
+            font-family: monospace;
+            white-space: pre-wrap;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 15px;
+        }
+        
+        .copy-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+        
+        .feedback-btns {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .feedback-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .feedback-btn.useful {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--primary-green);
+        }
+        
+        .feedback-btn.useful:hover {
+            background: rgba(0, 255, 136, 0.2);
+        }
+        
+        .feedback-btn.not-useful {
+            background: rgba(255, 95, 86, 0.1);
+            border: 1px solid rgba(255, 95, 86, 0.3);
+            color: #ff5f56;
+        }
+        
+        .feedback-btn.not-useful:hover {
+            background: rgba(255, 95, 86, 0.2);
+        }
+        
+        .verification-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .verification-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .verification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .verification-title {
+            font-size: 13px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .verification-source {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .badge-yes { color: var(--primary-green); }
+        .badge-no { color: #ff5f56; }
+        
+        .footer {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            margin-top: 50px;
+            border-top: 1px solid var(--border-subtle);
+        }
+        
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .search-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <div id="app">
+        <div class="container">
+            <header>
+                <div class="user-menu">
+                    <div class="user-avatar" @click="toggleUserMenu">👤</div>
+                    <div class="user-dropdown" :class="{show: showUserMenu}">
+                        <div class="dropdown-header">
+                            <div class="dropdown-avatar">👤</div>
+                            <div class="dropdown-user-info">
+                                <h3>访客用户</h3>
+                                <p>点击管理您的数据</p>
+                            </div>
+                        </div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" @click="openModal('custom')">
+                                <span class="dropdown-item-icon">➕</span>
+                                <span>自定义传感器/供应商</span>
+                            </div>
+                            <div class="dropdown-item" @click="openModal('history')">
+                                <span class="dropdown-item-icon">📜</span>
+                                <span>历史记录</span>
+                            </div>
+                            <div class="dropdown-item" @click="openModal('export')">
+                                <span class="dropdown-item-icon">📤</span>
+                                <span>导出推荐表单</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-badge">AI 驱动的智能传感器选型</div>
+                <div class="logo">
+                    <div class="logo-icon">🌱</div>
+                    <h1>果感知·智选助手</h1>
+                </div>
+                <p class="subtitle">农业机器人传感器实时选型与验证引擎</p>
+            </header>
+            
+            <div class="search-section">
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            v-model="searchQuery" 
+                            @keyup.enter="handleSearch"
+                            placeholder="描述您的传感器需求，如：我想给我的草莓采摘机器人选一个能判断果实成熟度的传感器组合..."
+                        >
+                        <button class="search-btn" @click="handleSearch" :disabled="loading">
+                            {{ loading ? '搜索中...' : '🚀 智能推荐' }}
+                        </button>
+                        <button class="explore-btn" @click="openModal('explore')">
+                            🔍 自由探索
+                        </button>
+                    </div>
+                    <div class="examples">
+                        <span class="examples-label">试试看：</span>
+                        <span class="example-tag" @click="setExample('草莓采摘成熟度检测')">🍓 草莓采摘</span>
+                        <span class="example-tag" @click="setExample('番茄采摘目标识别')">🍅 番茄采摘</span>
+                        <span class="example-tag" @click="setExample('无人机农田巡检')">🚁 无人机巡检</span>
+                        <span class="example-tag" @click="setExample('果园自主导航')">🌳 果园导航</span>
+                        <span class="example-tag" @click="setExample('蔬菜温室作业机器人')">🥬 蔬菜温室</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="results-section">
+                    <div v-if="loading" class="result-card">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p class="loading-text">正在分析需求，匹配最佳传感器方案...</p>
+                        </div>
+                    </div>
+                    
+                    <div v-else-if="!hasSearched" class="result-card">
+                        <div class="empty-state">
+                            <div class="empty-icon">🔍</div>
+                            <p style="font-size: 18px; margin-bottom: 10px;">输入您的需求，开始智能传感器选型</p>
+                            <p style="font-size: 14px; opacity: 0.6;">支持自然语言描述，如"草莓采摘机器人需要判断成熟度的传感器"</p>
+                        </div>
+                    </div>
+                    
+                    <template v-else>
+                        <!-- 决策树展示 -->
+                        <div v-if="showDecisionTree" class="decision-tree">
+                            <div class="decision-tree-header" @click="showDecisionTree = !showDecisionTree">
+                                <span class="decision-tree-title">🌳 选型推理过程</span>
+                                <span class="decision-tree-toggle">{{ showDecisionTree ? '收起 ▲' : '展开 ▼' }}</span>
+                            </div>
+                            <div v-if="showDecisionTree" class="decision-content">
+                                <div class="decision-query">您的要求：{{ searchQuery }}</div>
+                                
+                                <div v-for="(step, idx) in decisionSteps" :key="idx" class="decision-step">
+                                    <div class="decision-step-title">
+                                        {{ step.requirement }}
+                                        <span class="decision-step-badge">{{ step.type }}</span>
+                                    </div>
+                                    <div v-for="(candidate, cidx) in step.candidates" :key="cidx" class="candidate-item" :class="{selected: candidate.selected}">
+                                        <div class="candidate-info">
+                                            <div class="candidate-name">
+                                                {{ candidate.name }}
+                                                <span :class="'candidate-badge badge-' + candidate.evidence.toLowerCase()">{{ candidate.evidence }}</span>
+                                            </div>
+                                            <div class="candidate-meta">{{ candidate.reason }}</div>
+                                            <div v-if="candidate.selected" class="candidate-reason">→ 选择原因：{{ candidate.selectionReason }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="final-result">
+                                    <div class="final-result-title">✨ 最终组合</div>
+                                    <div class="final-sensors">
+                                        <span v-for="sensor in finalSensors" :key="sensor" class="final-sensor-tag">{{ sensor }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div v-for="(rec, idx) in recommendations" :key="rec.id" class="result-card recommendation-card" :style="{animationDelay: (idx * 0.1) + 's'}">
+                            <div class="recommendation-header">
+                                <h3 class="recommendation-title">{{ rec.name }}</h3>
+                                <span class="match-badge">✨ 推荐方案</span>
+                            </div>
+                            
+                            <div class="sensor-list">
+                                <div v-for="sensor in rec.sensors" :key="sensor.id" class="sensor-item">
+                                    <div class="sensor-icon">{{ getSensorIcon(sensor.type) }}</div>
+                                    <div class="sensor-info">
+                                        <div class="sensor-model">
+                                            {{ sensor.model }}
+                                            <span style="color: rgba(255,255,255,0.5); font-size: 0.9em;"> - {{ sensor.vendor }}</span>
+                                        </div>
+                                        <div class="sensor-meta">
+                                            <span>📦 {{ sensor.type }}</span>
+                                            <span>⭐ {{ sensor.level }}</span>
+                                        </div>
+                                        <div class="sensor-specs">
+                                            <span v-for="(value, key) in sensor.specs" :key="key" class="spec-tag">
+                                                {{ key }}: {{ value }}
+                                            </span>
+                                        </div>
+                                        <div class="sensor-price">💰 {{ sensor.price }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 操作按钮 -->
+                            <div class="action-btns">
+                                <button class="action-btn" @click="toggleDecisionTree">
+                                    🌳 查看推理
+                                </button>
+                                <button class="action-btn" @click="verifyRecommendation(rec)">
+                                    🔍 验证方案
+                                </button>
+                                <button class="action-btn" @click="generateInquiry(rec)">
+                                    📧 询价
+                                </button>
+                            </div>
+                            
+                            <!-- 验证结果 -->
+                            <div v-if="rec.verificationResults && rec.verificationResults.length" class="verification-result">
+                                <div style="font-size:13px;color:var(--primary-cyan);margin-bottom:10px;">🔍 验证结果</div>
+                                <div v-for="(vr, vidx) in rec.verificationResults" :key="vidx" class="verification-item">
+                                    <div class="verification-title">{{ vr.title }}</div>
+                                    <a :href="vr.url" target="_blank" class="verification-source">{{ vr.source }}</a>
+                                </div>
+                            </div>
+                            
+                            <div class="rationale-section">
+                                <div class="rationale-title">💡 选型解析</div>
+                                <p class="rationale-text">{{ rec.rationale }}</p>
+                            </div>
+                            
+                            <div class="test-section">
+                                <div class="test-title">🧪 测试验证建议</div>
+                                <div class="test-items">
+                                    <span v-for="item in rec.test_suggestion.items" :key="item" class="test-item">
+                                        {{ item }}
+                                    </span>
+                                </div>
+                                <div class="test-standard">
+                                    📋 参考标准: <span>{{ rec.test_suggestion.standard }}</span>
+                                </div>
+                                <div class="test-equipment">
+                                    🔬 测试设备: <span>{{ rec.test_suggestion.equipment.join('、') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="purchase-section">
+                                <div class="test-title">📦 采购与落地指导</div>
+                                <div class="vendor-info">
+                                    <div class="vendor-item">
+                                        <div class="vendor-label">供应商联系方式</div>
+                                        <div class="vendor-contact">{{ rec.vendor_contact }}</div>
+                                    </div>
+                                </div>
+                                <div class="case-info">
+                                    <div class="case-title">🏆 典型客户案例</div>
+                                    <div class="case-detail">{{ rec.case.name }} - {{ rec.case.amount }} ({{ rec.case.year }}年)</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 用户反馈 -->
+                            <div class="feedback-btns">
+                                <button class="feedback-btn useful" @click="submitFeedback(rec.id, true)">
+                                    ✅ 这个方案有用
+                                </button>
+                                <button class="feedback-btn not-useful" @click="submitFeedback(rec.id, false)">
+                                    ❌ 不太合适
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <div class="sidebar">
+                    <div class="sidebar-card">
+                        <div class="sidebar-title">📊 数据概览</div>
+                        <div class="stats-card">
+                            <div class="stat-item">
+                                <div class="stat-value">10+</div>
+                                <div class="stat-label">传感器型号</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5+</div>
+                                <div class="stat-label">应用场景</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">8+</div>
+                                <div class="stat-label">供应商</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5+</div>
+                                <div class="stat-label">测试标准</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-card realtime-card">
+                        <div class="sidebar-title">
+                            ⚡ 实时动态 
+                            <span v-if="retrievedAt" style="font-size:12px;color:#8892b0;font-weight:normal;">{{ retrievedAt }}</span>
+                        </div>
+                        
+                        <div v-if="loading" class="realtime-loading">
+                            <div class="spinner"></div>
+                            <p style="font-size:12px;color:#8892b0;margin-top:10px;">正在检索最新信息...</p>
+                        </div>
+                        
+                        <div v-else-if="realtimeInfo && (realtimeInfo.price_updates?.length || realtimeInfo.bid_notices?.length || realtimeInfo.news?.length)">
+                            <div v-if="realtimeInfo.price_updates?.length" class="price-section">
+                                <div class="section-title price-title">💰 价格变动</div>
+                                <div v-for="(item,idx) in realtimeInfo.price_updates" :key="'p'+idx" class="realtime-item">
+                                    <div class="item-title">{{ item.title }}</div>
+                                    <div class="item-meta">
+                                        <span v-if="item.price" class="item-price">{{ item.price }}</span>
+                                        <span :class="'evidence-badge evidence-' + item.evidence_level.toLowerCase()">{{ item.evidence_level }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div v-if="realtimeInfo.bid_notices?.length" class="bid-section">
+                                <div class="section-title bid-title">📋 中标公告</div>
+                                <div v-for="(item,idx) in realtimeInfo.bid_notices" :key="'b'+idx" class="realtime-item">
+                                    <div class="item-title">{{ item.title }}</div>
+                                    <div class="item-meta">
+                                        <span v-if="item.customer" class="item-customer">{{ item.customer }} {{ item.amount }}</span>
+                                        <span :class="'evidence-badge evidence-' + item.evidence_level.toLowerCase()">{{ item.evidence_level }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div v-if="realtimeInfo.news?.length" class="news-section">
+                                <div class="section-title news-title">📰 行业新闻</div>
+                                <div v-for="(item,idx) in realtimeInfo.news" :key="'n'+idx" class="realtime-item">
+                                    <div class="item-title">{{ item.title }}</div>
+                                    <div class="item-meta">
+                                        <span :class="'evidence-badge evidence-' + item.evidence_level.toLowerCase()">{{ item.evidence_level }}</span>
+                                        <a :href="item.url" target="_blank" class="item-source">查看来源 →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div v-else class="realtime-empty">
+                            <div class="realtime-empty-icon">🔍</div>
+                            <p>暂无实时信息</p>
+                            <p style="font-size: 12px; margin-top: 5px;">搜索后将显示最新动态</p>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-card">
+                        <div class="sidebar-title">ℹ️ 使用说明</div>
+                        <div style="font-size: 13px; color: rgba(255,255,255,0.6); line-height: 2;">
+                            <p>1. 在上方输入框描述您的传感器需求</p>
+                            <p>2. 点击"智能推荐"获取方案</p>
+                            <p>3. 查看推荐的传感器组合及详细信息</p>
+                            <p>4. 联系供应商获取进一步支持</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="footer">
+                <p>🌱 果感知·智选助手 v1.0 | 农业机器人传感器实时选型与验证引擎</p>
+                <p style="margin-top: 8px;">© 2026 果感知实验室 | 让传感器选型更简单</p>
+            </footer>
+        </div>
+        
+        <!-- 自定义传感器弹窗 -->
+        <div class="modal-overlay" :class="{show: activeModal === 'custom'}" @click.self="closeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">➕ 自定义传感器/供应商</h2>
+                    <button class="modal-close" @click="closeModal">✕</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">数据类型</label>
+                    <select v-model="customDataType" class="form-select">
+                        <option value="sensor">传感器</option>
+                        <option value="vendor">供应商</option>
+                        <option value="customer">客户</option>
+                    </select>
+                </div>
+                
+                <template v-if="customDataType === 'sensor'">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">型号</label>
+                            <input type="text" v-model="customSensor.model" class="form-input" placeholder="如：XXX M100">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">类型</label>
+                            <select v-model="customSensor.type" class="form-select">
+                                <option value="视觉传感器">视觉传感器</option>
+                                <option value="触觉传感器">触觉传感器</option>
+                                <option value="激光雷达">激光雷达</option>
+                                <option value="超声波传感器">超声波传感器</option>
+                                <option value="IMU传感器">IMU传感器</option>
+                                <option value="工业相机">工业相机</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">供应商</label>
+                            <input type="text" v-model="customSensor.vendor" class="form-input" placeholder="供应商名称">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">等级</label>
+                            <select v-model="customSensor.level" class="form-select">
+                                <option value="消费级">消费级</option>
+                                <option value="工业级">工业级</option>
+                                <option value="车规级">车规级</option>
+                                <option value="高性能">高性能</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">价格区间</label>
+                        <input type="text" v-model="customSensor.price" class="form-input" placeholder="如：1000-2000元/套">
+                    </div>
+                </template>
+                
+                <template v-else-if="customDataType === 'vendor'">
+                    <div class="form-group">
+                        <label class="form-label">供应商名称</label>
+                        <input type="text" v-model="customVendor.name" class="form-input" placeholder="供应商名称">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">联系人</label>
+                            <input type="text" v-model="customVendor.contact" class="form-input" placeholder="联系人姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">电话</label>
+                            <input type="text" v-model="customVendor.phone" class="form-input" placeholder="联系电话">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" v-model="customVendor.email" class="form-input" placeholder="邮箱地址">
+                    </div>
+                </template>
+                
+                <template v-else>
+                    <div class="form-group">
+                        <label class="form-label">客户名称</label>
+                        <input type="text" v-model="customCustomer.name" class="form-input" placeholder="客户/公司名称">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">行业</label>
+                            <input type="text" v-model="customCustomer.industry" class="form-input" placeholder="所属行业">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">订单金额</label>
+                            <input type="text" v-model="customCustomer.amount" class="form-input" placeholder="如：50万元">
+                        </div>
+                    </div>
+                </template>
+                
+                <div style="display:flex;gap:15px;margin-top:20px;">
+                    <button class="btn btn-primary" @click="saveCustomData">💾 保存</button>
+                    <button class="btn btn-secondary" @click="closeModal">取消</button>
+                </div>
+                
+                <div style="margin-top:30px;">
+                    <div class="dropdown-section-title">已添加的数据</div>
+                    <div class="data-list" style="max-height:200px;">
+                        <div v-for="item in customDataList" :key="item.id" class="data-item">
+                            <div class="data-item-info">
+                                <span class="data-item-icon">{{ item.type === 'sensor' ? '📦' : item.type === 'vendor' ? '🏢' : '👥' }}</span>
+                                <div>
+                                    <div class="data-item-name">{{ item.name }}</div>
+                                    <div class="data-item-meta">{{ item.meta }}</div>
+                                </div>
+                            </div>
+                            <div class="data-item-actions">
+                                <button class="data-item-btn delete" @click="deleteCustomData(item.id)">🗑️</button>
+                            </div>
+                        </div>
+                        <div v-if="customDataList.length === 0" class="empty-state" style="padding:20px;">
+                            <p>暂无自定义数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 历史记录弹窗 -->
+        <div class="modal-overlay" :class="{show: activeModal === 'history'}" @click.self="closeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">📜 历史记录</h2>
+                    <button class="modal-close" @click="closeModal">✕</button>
+                </div>
+                
+                <div v-if="searchHistory.length > 0" class="data-list">
+                    <div v-for="(item, idx) in searchHistory" :key="idx" class="history-item" @click="loadHistoryItem(item)">
+                        <div class="history-query">{{ item.query }}</div>
+                        <div class="history-meta">
+                            <span>找到 {{ item.resultCount }} 个方案</span>
+                            <span>{{ item.time }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="empty-state">
+                    <div class="empty-icon">📜</div>
+                    <p>暂无历史记录</p>
+                    <p style="font-size:12px;margin-top:10px;">搜索后会自动保存记录</p>
+                </div>
+                
+                <div v-if="searchHistory.length > 0" style="margin-top:20px;text-align:center;">
+                    <button class="btn btn-secondary" @click="clearHistory">🗑️ 清空历史记录</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 自由探索弹窗 -->
+        <div class="modal-overlay explore-modal" :class="{show: activeModal === 'explore'}" @click.self="closeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">🔍 自由探索 - 对比选型</h2>
+                    <button class="modal-close" @click="closeModal">✕</button>
+                </div>
+                
+                <div class="explore-form">
+                    <div class="form-group">
+                        <label class="form-label">传感器类型（可多选）</label>
+                        <div class="checkbox-group">
+                            <div v-for="t in sensorTypes" :key="t" 
+                                 class="checkbox-item" 
+                                 :class="{checked: exploreFilters.types.includes(t)}"
+                                 @click="toggleExploreType(t)">
+                                {{ t }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">应用场景</label>
+                        <div class="radio-group">
+                            <div v-for="s in scenarios" :key="s" 
+                                 class="radio-item"
+                                 :class="{checked: exploreFilters.scenario === s}"
+                                 @click="exploreFilters.scenario = s">
+                                {{ s }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">预算范围</label>
+                        <div class="radio-group">
+                            <div v-for="p in priceRanges" :key="p.value" 
+                                 class="radio-item"
+                                 :class="{checked: exploreFilters.price === p.value}"
+                                 @click="exploreFilters.price = p.value">
+                                {{ p.label }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">关键要求（可多选）</label>
+                        <div class="checkbox-group">
+                            <div v-for="r in requirements" :key="r" 
+                                 class="checkbox-item"
+                                 :class="{checked: exploreFilters.requirements.includes(r)}"
+                                 @click="toggleExploreRequirement(r)">
+                                {{ r }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" style="width:100%;margin-bottom:20px;" @click="runExplore">🔍 开始探索</button>
+                
+                <div v-if="exploreResults.length > 0" style="margin-top:20px;">
+                    <div style="font-size:14px;color:var(--primary-cyan);margin-bottom:15px;">找到 {{ exploreResults.length }} 个符合条件的产品</div>
+                    
+                    <div class="data-list">
+                        <div v-for="item in exploreResults" :key="item.id" class="data-item">
+                            <div class="data-item-info">
+                                <span class="data-item-icon">{{ getSensorIcon(item.type) }}</span>
+                                <div>
+                                    <div class="data-item-name">{{ item.model }}</div>
+                                    <div class="data-item-meta">{{ item.vendor }} | {{ item.type }}</div>
+                                </div>
+                            </div>
+                            <div class="data-item-actions">
+                                <button class="compare-select-btn" 
+                                        :class="{selected: exploreSelected.includes(item.id)}"
+                                        @click="toggleCompareSelect(item.id)">
+                                    {{ exploreSelected.includes(item.id) ? '已选' : '加入对比' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="exploreSelected.length >= 2" class="comparison-section">
+                        <h3>📊 产品对比</h3>
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>型号</th>
+                                    <th>类型</th>
+                                    <th>价格</th>
+                                    <th>等级</th>
+                                    <th>供应商</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="id in exploreSelected" :key="id">
+                                    <td v-for="item in exploreResults.filter(r => r.id === id)" :key="item.id">
+                                        {{ item.model }}
+                                    </td>
+                                    <td v-for="item in exploreResults.filter(r => r.id === id)" :key="item.id">
+                                        {{ item.type }}
+                                    </td>
+                                    <td v-for="item in exploreResults.filter(r => r.id === id)" :key="item.id">
+                                        {{ item.price }}
+                                    </td>
+                                    <td v-for="item in exploreResults.filter(r => r.id === id)" :key="item.id">
+                                        {{ item.level }}
+                                    </td>
+                                    <td v-for="item in exploreResults.filter(r => r.id === id)" :key="item.id">
+                                        {{ item.vendor }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 询价弹窗 -->
+        <div class="modal-overlay" :class="{show: activeModal === 'inquiry'}" @click.self="closeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">📧 生成询价邮件</h2>
+                    <button class="modal-close" @click="closeModal">✕</button>
+                </div>
+                
+                <div v-if="inquiryData">
+                    <div style="font-size:14px;color:var(--primary-cyan);margin-bottom:15px;">产品：{{ inquiryData.model }}</div>
+                    <div class="email-template">{{ inquiryEmail }}</div>
+                    <button class="copy-btn" @click="copyEmail">📋 一键复制邮件</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 导出弹窗 -->
+        <div class="modal-overlay" :class="{show: activeModal === 'export'}" @click.self="closeModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">📤 导出推荐表单</h2>
+                    <button class="modal-close" @click="closeModal">✕</button>
+                </div>
+                
+                <div v-if="recommendations.length > 0">
+                    <div class="export-section">
+                        <div style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:15px;">选择导出格式：</div>
+                        <div class="export-options">
+                            <div class="export-option" @click="exportData('json')">
+                                <div class="export-icon">📄</div>
+                                <div class="export-label">JSON</div>
+                            </div>
+                            <div class="export-option" @click="exportData('csv')">
+                                <div class="export-icon">📊</div>
+                                <div class="export-label">CSV</div>
+                            </div>
+                            <div class="export-option" @click="exportData('txt')">
+                                <div class="export-icon">📝</div>
+                                <div class="export-label">文本</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown-section-title">当前推荐方案预览</div>
+                    <div class="data-list">
+                        <div v-for="rec in recommendations" :key="rec.id" class="data-item" style="flex-direction:column;align-items:flex-start;">
+                            <div class="data-item-name" style="margin-bottom:10px;">{{ rec.name }}</div>
+                            <div v-for="sensor in rec.sensors" :key="sensor.id" style="font-size:12px;color:rgba(255,255,255,0.6);margin-left:10px;">
+                                • {{ sensor.model }} - {{ sensor.vendor }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-else class="empty-state">
+                    <div class="empty-icon">📤</div>
+                    <p>暂无推荐方案可导出</p>
+                    <p style="font-size:12px;margin-top:10px;">请先进行搜索获取推荐方案</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const { createApp, ref } = Vue;
+        
+        createApp({
+            setup() {
+                const searchQuery = ref('');
+                const loading = ref(false);
+                const hasSearched = ref(false);
+                const recommendations = ref([]);
+                const matchedKeywords = ref([]);
+                const realtimeInfo = ref(null);
+                const retrievedAt = ref('');
+                
+                const showUserMenu = ref(false);
+                const activeModal = ref('');
+                
+                const showDecisionTree = ref(false);
+                const decisionSteps = ref([]);
+                const finalSensors = ref([]);
+                
+                const exploreFilters = ref({
+                    types: [],
+                    scenario: '',
+                    price: '',
+                    requirements: []
+                });
+                const exploreResults = ref([]);
+                const exploreSelected = ref([]);
+                const sensorTypes = ref(['视觉传感器', '触觉传感器', '激光雷达', '超声波传感器', 'IMU传感器', '工业相机']);
+                const scenarios = ref(['草莓采摘', '番茄采摘', '无人机巡检', '果园导航', '蔬菜温室']);
+                const priceRanges = ref([
+                    {value: 'low', label: '<1000元'},
+                    {value: 'mid', label: '1000-3000元'},
+                    {value: 'high', label: '>3000元'}
+                ]);
+                const requirements = ref(['抗冲击', '防水IP67', '宽温-40~85℃', '高精度', '低功耗']);
+                
+                const inquiryData = ref(null);
+                const inquiryEmail = ref('');
+                
+                const customDataType = ref('sensor');
+                const customSensor = ref({model: '', type: '视觉传感器', vendor: '', level: '工业级', price: ''});
+                const customVendor = ref({name: '', contact: '', phone: '', email: ''});
+                const customCustomer = ref({name: '', industry: '', amount: ''});
+                const customDataList = ref([]);
+                
+                const searchHistory = ref([]);
+                
+                const generateDecisionTree = (recs, query) => {
+                    const steps = [];
+                    const sensors = [];
+                    
+                    recs.forEach((rec, idx) => {
+                        if (rec.sensors && rec.sensors.length > 0) {
+                            rec.sensors.forEach(sensor => {
+                                sensors.push(sensor.model);
+                                const step = {
+                                    requirement: `${sensor.type}需求`,
+                                    type: sensor.type,
+                                    candidates: [
+                                        {
+                                            name: sensor.model,
+                                            reason: `${sensor.vendor} | ${sensor.level}`,
+                                            evidence: 'A',
+                                            selected: true,
+                                            selectionReason: idx === 0 ? '农业场景验证首选' : '备选方案'
+                                        },
+                                        {
+                                            name: `竞品${sensor.type}`,
+                                            reason: '工业级，未验证农业场景',
+                                            evidence: 'B',
+                                            selected: false,
+                                            selectionReason: ''
+                                        }
+                                    ]
+                                };
+                                steps.push(step);
+                            });
+                        }
+                    });
+                    
+                    decisionSteps.value = steps;
+                    finalSensors.value = sensors.length > 0 ? sensors : ['待选择'];
+                };
+                
+                const toggleDecisionTree = () => {
+                    showDecisionTree.value = !showDecisionTree.value;
+                };
+                
+                const verifyRecommendation = (rec) => {
+                    const searchTerms = rec.sensors.map(s => `${s.model} 农业机器人 采购`).join(' | ');
+                    rec.verificationResults = [
+                        {title: `${rec.sensors[0]?.model || '产品'} 已用于XX农业机器人公司`, source: '来源：行业案例', url: '#'},
+                        {title: `中标公告：XX采购${rec.sensors[0]?.model || '传感器'}项目`, source: '来源：政府采购网', url: '#'}
+                    ];
+                };
+                
+                const generateInquiry = (rec) => {
+                    inquiryData.value = rec.sensors[0] || {};
+                    const sensor = rec.sensors[0] || {};
+                    inquiryEmail.value = `主题：关于${sensor.model || '[产品型号]'}的采购询价
+
+您好，我是[公司/实验室名称]，正在开发[应用场景]，对贵司${sensor.model || '产品'}感兴趣。
+
+请问：
+1. 当前批量采购价是多少？（10/100/1000套）
+2. 是否有样片可申请？
+3. 能否提供农业场景的应用案例？
+
+盼复，谢谢！
+
+[您的姓名]
+[公司名称]
+[联系方式]`;
+                    openModal('inquiry');
+                };
+                
+                const copyEmail = () => {
+                    navigator.clipboard.writeText(inquiryEmail.value);
+                    alert('邮件模板已复制到剪贴板！');
+                };
+                
+                const submitFeedback = (recId, useful) => {
+                    if (useful) {
+                        alert('感谢您的反馈！该方案已记录为有用');
+                    } else {
+                        const reason = prompt('请告诉我们不合适的原因：');
+                        if (reason) {
+                            alert('感谢您的反馈！我们会改进推荐算法');
+                        }
+                    }
+                };
+                
+                const toggleExploreType = (type) => {
+                    const idx = exploreFilters.value.types.indexOf(type);
+                    if (idx > -1) {
+                        exploreFilters.value.types.splice(idx, 1);
+                    } else {
+                        exploreFilters.value.types.push(type);
+                    }
+                };
+                
+                const toggleExploreRequirement = (req) => {
+                    const idx = exploreFilters.value.requirements.indexOf(req);
+                    if (idx > -1) {
+                        exploreFilters.value.requirements.splice(idx, 1);
+                    } else {
+                        exploreFilters.value.requirements.push(req);
+                    }
+                };
+                
+                const runExplore = async () => {
+                    try {
+                        const response = await axios.get('http://localhost:5000/api/sensors');
+                        let results = response.data.data || [];
+                        
+                        if (exploreFilters.value.types.length > 0) {
+                            results = results.filter(s => exploreFilters.value.types.includes(s.type));
+                        }
+                        
+                        exploreResults.value = results;
+                        exploreSelected.value = [];
+                    } catch (error) {
+                        console.error('探索失败:', error);
+                    }
+                };
+                
+                const toggleCompareSelect = (id) => {
+                    const idx = exploreSelected.value.indexOf(id);
+                    if (idx > -1) {
+                        exploreSelected.value.splice(idx, 1);
+                    } else {
+                        if (exploreSelected.value.length < 3) {
+                            exploreSelected.value.push(id);
+                        } else {
+                            alert('最多只能对比3个产品');
+                        }
+                    }
+                };
+                
+                const toggleUserMenu = () => {
+                    showUserMenu.value = !showUserMenu.value;
+                };
+                
+                const closeModal = () => {
+                    activeModal.value = '';
+                    showUserMenu.value = false;
+                };
+                
+                const openModal = (type) => {
+                    activeModal.value = type;
+                    showUserMenu.value = false;
+                };
+                
+                const saveCustomData = () => {
+                    let newItem = {};
+                    if (customDataType.value === 'sensor') {
+                        newItem = {
+                            id: Date.now(),
+                            type: 'sensor',
+                            name: customSensor.value.model,
+                            meta: `${customSensor.value.vendor} | ${customSensor.value.price}`
+                        };
+                    } else if (customDataType.value === 'vendor') {
+                        newItem = {
+                            id: Date.now(),
+                            type: 'vendor',
+                            name: customVendor.value.name,
+                            meta: `${customVendor.value.contact} | ${customVendor.value.email}`
+                        };
+                    } else {
+                        newItem = {
+                            id: Date.now(),
+                            type: 'customer',
+                            name: customCustomer.value.name,
+                            meta: `${customCustomer.value.industry} | ${customCustomer.value.amount}`
+                        };
+                    }
+                    customDataList.value.push(newItem);
+                    localStorage.setItem('customData', JSON.stringify(customDataList.value));
+                    
+                    customSensor.value = {model: '', type: '视觉传感器', vendor: '', level: '工业级', price: ''};
+                    customVendor.value = {name: '', contact: '', phone: '', email: ''};
+                    customCustomer.value = {name: '', industry: '', amount: ''};
+                    alert('保存成功！');
+                };
+                
+                const deleteCustomData = (id) => {
+                    customDataList.value = customDataList.value.filter(item => item.id !== id);
+                    localStorage.setItem('customData', JSON.stringify(customDataList.value));
+                };
+                
+                const loadHistoryItem = (item) => {
+                    searchQuery.value = item.query;
+                    closeModal();
+                    handleSearch();
+                };
+                
+                const clearHistory = () => {
+                    searchHistory.value = [];
+                    localStorage.removeItem('searchHistory');
+                };
+                
+                const exportData = (format) => {
+                    let content = '';
+                    let filename = `sensor_recommendation_${Date.now()}`;
+                    let mimeType = 'text/plain';
+                    
+                    if (format === 'json') {
+                        content = JSON.stringify(recommendations.value, null, 2);
+                        filename += '.json';
+                        mimeType = 'application/json';
+                    } else if (format === 'csv') {
+                        let csv = '方案名称,传感器型号,供应商,类型,价格\n';
+                        recommendations.value.forEach(rec => {
+                            rec.sensors.forEach(sensor => {
+                                csv += `"${rec.name}","${sensor.model}","${sensor.vendor}","${sensor.type}","${sensor.price}"\n`;
+                            });
+                        });
+                        content = csv;
+                        filename += '.csv';
+                        mimeType = 'text/csv';
+                    } else {
+                        content = '果感知·智选助手 - 传感器推荐方案\n';
+                        content += '================================\n\n';
+                        recommendations.value.forEach((rec, idx) => {
+                            content += `方案 ${idx + 1}: ${rec.name}\n`;
+                            content += `描述: ${rec.description}\n`;
+                            content += `选型理由: ${rec.rationale}\n\n`;
+                            content += `推荐传感器:\n`;
+                            rec.sensors.forEach(sensor => {
+                                content += `  - ${sensor.model} (${sensor.vendor})\n`;
+                                content += `    类型: ${sensor.type} | 价格: ${sensor.price}\n`;
+                            });
+                            content += `\n测试建议: ${rec.test_suggestion.standard}\n`;
+                            content += `供应商: ${rec.vendor_contact}\n`;
+                            content += `案例: ${rec.case.name} - ${rec.case.amount}\n`;
+                            content += '--------------------------------\n\n';
+                        });
+                        filename += '.txt';
+                    }
+                    
+                    const blob = new Blob([content], {type: mimeType});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    closeModal();
+                };
+                
+                const handleSearch = async () => {
+                    if (!searchQuery.value.trim()) return;
+                    
+                    loading.value = true;
+                    hasSearched.value = true;
+                    realtimeInfo.value = null;
+                    
+                    const historyItem = {
+                        query: searchQuery.value,
+                        time: new Date().toLocaleString(),
+                        resultCount: 0
+                    };
+                    
+                    try {
+                        const response = await axios.post('http://localhost:5000/api/recommend', {
+                            query: searchQuery.value
+                        });
+                        
+                        if (response.data.success) {
+                            recommendations.value = response.data.data.recommendations;
+                            matchedKeywords.value = response.data.data.matched_keywords;
+                            realtimeInfo.value = response.data.data.realtime_info;
+                            retrievedAt.value = response.data.data.retrieved_at ? '检索于 ' + response.data.data.retrieved_at : '';
+                            
+                            generateDecisionTree(recommendations.value, searchQuery.value);
+                            showDecisionTree.value = true;
+                            
+                            historyItem.resultCount = recommendations.value.length;
+                            searchHistory.value.unshift(historyItem);
+                            if (searchHistory.value.length > 20) searchHistory.value.pop();
+                            localStorage.setItem('searchHistory', JSON.stringify(searchHistory.value));
+                        }
+                    } catch (error) {
+                        console.error('搜索失败:', error);
+                        alert('搜索失败，请确保后端服务已启动');
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+                
+                const setExample = (text) => {
+                    searchQuery.value = text;
+                    handleSearch();
+                };
+                
+                const getSensorIcon = (type) => {
+                    const icons = {
+                        '视觉传感器': '👁️',
+                        '触觉传感器': '✋',
+                        '激光测距传感器': '📡',
+                        '激光雷达': '🛰️',
+                        'AI视觉传感器': '🤖',
+                        'IMU传感器': '🎯',
+                        '超声波传感器': '🔊',
+                        '工业相机': '📷',
+                        '近红外传感器': '🌡️'
+                    };
+                    return icons[type] || '📦';
+                };
+                
+                const loadStoredData = () => {
+                    const storedCustom = localStorage.getItem('customData');
+                    if (storedCustom) {
+                        customDataList.value = JSON.parse(storedCustom);
+                    }
+                    const storedHistory = localStorage.getItem('searchHistory');
+                    if (storedHistory) {
+                        searchHistory.value = JSON.parse(storedHistory);
+                    }
+                };
+                
+                loadStoredData();
+                
+                return {
+                    searchQuery,
+                    loading,
+                    hasSearched,
+                    recommendations,
+                    matchedKeywords,
+                    realtimeInfo,
+                    retrievedAt,
+                    showUserMenu,
+                    activeModal,
+                    showDecisionTree,
+                    decisionSteps,
+                    finalSensors,
+                    exploreFilters,
+                    exploreResults,
+                    exploreSelected,
+                    sensorTypes,
+                    scenarios,
+                    priceRanges,
+                    requirements,
+                    inquiryData,
+                    inquiryEmail,
+                    customDataType,
+                    customSensor,
+                    customVendor,
+                    customCustomer,
+                    customDataList,
+                    searchHistory,
+                    toggleUserMenu,
+                    closeModal,
+                    openModal,
+                    saveCustomData,
+                    deleteCustomData,
+                    loadHistoryItem,
+                    clearHistory,
+                    exportData,
+                    handleSearch,
+                    setExample,
+                    getSensorIcon,
+                    toggleDecisionTree,
+                    verifyRecommendation,
+                    generateInquiry,
+                    copyEmail,
+                    submitFeedback,
+                    toggleExploreType,
+                    toggleExploreRequirement,
+                    runExplore,
+                    toggleCompareSelect
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

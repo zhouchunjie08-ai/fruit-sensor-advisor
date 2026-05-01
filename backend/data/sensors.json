@@ -1,0 +1,172 @@
+[
+  {
+    "id": 1,
+    "model": "华测 M620",
+    "type": "视觉传感器",
+    "vendor": "华测导航",
+    "level": "工业级",
+    "specs": {
+      "分辨率": "RGB+Depth双目",
+      "测距范围": "0.2-10m",
+      "工作温度": "-40~85℃",
+      "精度": "±2mm@2m",
+      "接口": "USB3.0/Ethernet"
+    },
+    "price": "800-1200元/套",
+    "url": "https://www.huatengn.com",
+    "contact": "400-800-8888"
+  },
+  {
+    "id": 2,
+    "model": "天羿领航 EAM1011",
+    "type": "触觉传感器",
+    "vendor": "天羿领航",
+    "level": "工业级",
+    "specs": {
+      "力感知范围": "0.1-50N",
+      "分辨率": "0.01N",
+      "采样频率": "1000Hz",
+      "响应时间": "<1ms",
+      "接口": "RS485/CAN"
+    },
+    "price": "1500-2500元/套",
+    "url": "https://www.tianyilhanghang.com",
+    "contact": "sales@tianyilhanghang.com"
+  },
+  {
+    "id": 3,
+    "model": "北醒光子 TF02-Pro",
+    "type": "激光测距传感器",
+    "vendor": "北醒光子",
+    "level": "工业级",
+    "specs": {
+      "测距范围": "0.1-40m",
+      "精度": "±1cm",
+      "角度": "±2°",
+      "防护等级": "IP67",
+      "接口": "UART/RS485"
+    },
+    "price": "300-500元/套",
+    "url": "https://www.benewake.com",
+    "contact": "info@benewake.com"
+  },
+  {
+    "id": 4,
+    "model": "速腾聚创 RS-LiDAR-M1",
+    "type": "激光雷达",
+    "vendor": "速腾聚创",
+    "level": "车规级",
+    "specs": {
+      "测距范围": "0.5-200m",
+      "角分辨率": "0.2°",
+      "垂直视场角": "25°",
+      "帧率": "10-20Hz",
+      "接口": "Ethernet"
+    },
+    "price": "2000-5000元/套",
+    "url": "https://www.robosense.cn",
+    "contact": "contact@robosense.cn"
+  },
+  {
+    "id": 5,
+    "model": "全向感知 OAK-D",
+    "type": "AI视觉传感器",
+    "vendor": "Luxonis",
+    "level": "消费级",
+    "specs": {
+      "分辨率": "4K RGB + 深度",
+      "AI算力": "4TOPS",
+      "视野": "120°",
+      "接口": "USB-C",
+      "功耗": "2.5W"
+    },
+    "price": "600-900元/套",
+    "url": "https://www.luxonis.com",
+    "contact": "support@luxonis.com"
+  },
+  {
+    "id": 6,
+    "model": "博世 BMI088",
+    "type": "IMU传感器",
+    "vendor": "Bosch",
+    "level": "车规级",
+    "specs": {
+      "加速度范围": "±24g",
+      "陀螺仪范围": "±2000°/s",
+      "噪声密度": "0.002°/s/√Hz",
+      "接口": "SPI/I2C",
+      "工作温度": "-40~85℃"
+    },
+    "price": "200-400元/套",
+    "url": "https://www.bosch-sensortec.com",
+    "contact": "info@bosch-sensortec.com"
+  },
+  {
+    "id": 7,
+    "model": "砝石 FLS-X4C",
+    "type": "超声波传感器",
+    "vendor": "砝石",
+    "level": "工业级",
+    "specs": {
+      "测距范围": "0.2-8m",
+      "精度": "±1cm",
+      "波束角": "15°",
+      "防护等级": "IP65",
+      "接口": "UART/模拟电压"
+    },
+    "price": "80-150元/套",
+    "url": "https://www.far-sensor.com",
+    "contact": "sales@far-sensor.com"
+  },
+  {
+    "id": 8,
+    "model": "禾赛科技 XT16",
+    "type": "激光雷达",
+    "vendor": "禾赛科技",
+    "level": "工业级",
+    "specs": {
+      "测距范围": "0.1-120m",
+      "角分辨率": "0.1°",
+      "垂直视场角": "31°",
+      "功耗": "8W",
+      "接口": "Ethernet"
+    },
+    "price": "3000-6000元/套",
+    "url": "https://www.hesai.com",
+    "contact": "info@hesai.com"
+  },
+  {
+    "id": 9,
+    "model": "海康机器人 MV-CA016",
+    "type": "工业相机",
+    "vendor": "海康机器人",
+    "level": "工业级",
+    "specs": {
+      "分辨率": "1600×1200",
+      "帧率": "40fps",
+      "接口": "GigE",
+      "传感器": "CMOS",
+      "防护等级": "IP67"
+    },
+    "price": "1000-1800元/套",
+    "url": "https://www.hikrobot.com",
+    "contact": "support@hikrobot.com"
+  },
+  {
+    "id": 10,
+    "model": "蓝点光电 LD-NIR-001",
+    "type": "近红外传感器",
+    "vendor": "蓝点光电",
+    "level": "实验室级",
+    "specs": {
+      "波长范围": "900-1700nm",
+      "分辨率": "5nm",
+      "采样率": "100kHz",
+      "接口": "USB3.0",
+      "应用": "水果糖度检测"
+    },
+    "price": "5000-8000元/套",
+    "url": "https://www.bluedot.cn",
+    "contact": "info@bluedot.cn"
+  }
+]

@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>果感知·智选助手 - 项目路演</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary-cyan: #00d9ff;
+            --primary-green: #00ff88;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --bg-dark: #0a0a1a;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .slides-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 80px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+        
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+        
+        .bg-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(0, 217, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 60%);
+            z-index: 0;
+        }
+        
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .slide-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .slide-content::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        
+        /* 封面页 */
+        .cover-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green), var(--accent-purple));
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin-bottom: 40px;
+            box-shadow: 0 30px 80px rgba(0, 217, 255, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .cover-title {
+            font-size: 4em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 30%, var(--primary-cyan) 50%, var(--primary-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+        
+        .cover-subtitle {
+            font-size: 1.6em;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 300;
+            margin-bottom: 50px;
+        }
+        
+        .cover-tags {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cover-tag {
+            padding: 10px 25px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50px;
+            font-size: 14px;
+        }
+        
+        .cover-meta {
+            margin-top: 50px;
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* 页面标题 */
+        .slide-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* 介绍卡片 */
+        .intro-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .intro-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px 25px;
+            transition: all 0.4s ease;
+        }
+        
+        .intro-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-cyan);
+            box-shadow: 0 20px 50px rgba(0, 217, 255, 0.2);
+        }
+        
+        .intro-card-icon {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, var(--accent-purple), #6366f1);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px;
+        }
+        
+        .intro-card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .intro-card-desc {
+            font-size: 0.95em;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+        
+        /* 功能列表 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            padding: 22px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            border-color: rgba(0, 217, 255, 0.3);
+            background: rgba(0, 217, 255, 0.05);
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .feature-text h3 {
+            font-size: 1.15em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .feature-text p {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* 用户功能 */
+        .user-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        
+        .user-feature-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.4s ease;
+        }
+        
+        .user-feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-cyan);
+        }
+        
+        .user-feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        
+        .user-feature-card:nth-child(1) .user-feature-icon {
+            background: linear-gradient(135deg, #f97316, #fb923c);
+        }
+        
+        .user-feature-card:nth-child(2) .user-feature-icon {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+        }
+        
+        .user-feature-card:nth-child(3) .user-feature-icon {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+        
+        .user-feature-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .user-feature-desc {
+            font-size: 0.95em;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+        
+        /* 技术架构 */
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+        
+        .tech-item {
+            text-align: center;
+        }
+        
+        .tech-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .tech-item:hover .tech-icon {
+            transform: scale(1.1);
+            border-color: var(--primary-cyan);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+        
+        .tech-name {
+            font-size: 1.05em;
+            font-weight: 500;
+        }
+        
+        .tech-desc {
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 4px;
+        }
+        
+        /* 演示截图 */
+        .demo-container {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+        
+        .demo-header {
+            display: flex;
+            gap: 8px;
+            padding: 12px 18px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .demo-dot.red { background: #ff5f56; }
+        .demo-dot.yellow { background: #ffbd2e; }
+        .demo-dot.green { background: #27ca40; }
+        
+        .demo-content {
+            padding: 30px;
+            min-height: 350px;
+        }
+        
+        .demo-search {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-input {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 15px;
+        }
+        
+        .demo-btn {
+            padding: 15px 30px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .demo-results {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        
+        .demo-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 20px;
+        }
+        
+        .demo-sidebar {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 20px;
+        }
+        
+        /* 数据展示 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 35px 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-cyan);
+        }
+        
+        .stat-value {
+            font-size: 2.8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 1.05em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* 商业模式 */
+        .biz-models {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+        
+        .biz-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            text-align: left;
+        }
+        
+        .biz-icon {
+            font-size: 36px;
+            flex-shrink: 0;
+        }
+        
+        .biz-content h3 {
+            font-size: 1.25em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .biz-content p {
+            font-size: 0.95em;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+        }
+        
+        /* 团队 */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+        
+        .team-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .team-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 15px;
+        }
+        
+        .team-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .team-role {
+            font-size: 0.9em;
+            color: var(--primary-cyan);
+        }
+        
+        /* 路线图 */
+        .roadmap {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 20px;
+        }
+        
+        .roadmap::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 100px;
+            right: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-green), var(--accent-purple));
+            border-radius: 2px;
+        }
+        
+        .roadmap-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .roadmap-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 15px;
+        }
+        
+        .roadmap-item:nth-child(1) .roadmap-icon { border-color: var(--primary-cyan); }
+        .roadmap-item:nth-child(2) .roadmap-icon { border-color: var(--primary-green); }
+        .roadmap-item:nth-child(3) .roadmap-icon { border-color: var(--accent-purple); }
+        .roadmap-item:nth-child(4) .roadmap-icon { border-color: var(--accent-orange); }
+        
+        .roadmap-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .roadmap-desc {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 180px;
+        }
+        
+        /* 结束页 */
+        .end-title {
+            font-size: 3.2em;
+            font-weight: 900;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .end-subtitle {
+            font-size: 1.4em;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 40px;
+        }
+        
+        .contact-info {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .contact-item {
+            padding: 18px 35px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            font-size: 1.05em;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-item:hover {
+            border-color: var(--primary-cyan);
+            background: rgba(0, 217, 255, 0.1);
+        }
+        
+        /* 导航 */
+        .nav-dots {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background: var(--primary-cyan);
+            transform: scale(1.3);
+        }
+        
+        .nav-arrows {
+            position: fixed;
+            bottom: 25px;
+            right: 35px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        
+        .nav-arrow {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-arrow:hover {
+            background: var(--primary-cyan);
+            border-color: var(--primary-cyan);
+        }
+        
+        .slide-number {
+            position: fixed;
+            bottom: 30px;
+            left: 35px;
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.4);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="slides-container">
+            
+            <!-- 封面页 -->
+            <div class="slide" :class="{active: currentSlide === 0}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                    <div class="cover-logo">🌱</div>
+                    <h1 class="cover-title">果感知·智选助手</h1>
+                    <p class="cover-subtitle">农业机器人传感器实时选型与验证引擎</p>
+                    <div class="cover-tags">
+                        <span class="cover-tag">🤖 农业机器人</span>
+                        <span class="cover-tag">🧠 AI 智能选型</span>
+                        <span class="cover-tag">⚡ 实时检索</span>
+                        <span class="cover-tag">📦 传感器库</span>
+                    </div>
+                    <p class="cover-meta" style="margin-top:50px;">2026年春季路演 | 版本 v1.0</p>
+                </div>
+            </div>
+            
+            <!-- 项目介绍 -->
+            <div class="slide" :class="{active: currentSlide === 1}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">🌱 项目介绍</h2>
+                    <div class="intro-cards">
+                        <div class="intro-card">
+                            <div class="intro-card-icon">🎯</div>
+                            <h3 class="intro-card-title">核心痛点</h3>
+                            <p class="intro-card-desc">农业机器人研发者选型困难，需要在海量传感器中寻找合适组合，耗时耗力</p>
+                        </div>
+                        <div class="intro-card">
+                            <div class="intro-card-icon">💡</div>
+                            <h3 class="intro-card-title">解决方案</h3>
+                            <p class="intro-card-desc">AI驱动的智能选型助手，一句话描述需求，获得完整传感器组合方案</p>
+                        </div>
+                        <div class="intro-card">
+                            <div class="intro-card-icon">🚀</div>
+                            <h3 class="intro-card-title">核心优势</h3>
+                            <p class="intro-card-desc">本地知识库+实时检索，兼顾可靠性与时效性，支持用户自定义数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 核心功能 -->
+            <div class="slide" :class="{active: currentSlide === 2}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">⚡ 核心功能</h2>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <div class="feature-icon">🧠</div>
+                            <div class="feature-text">
+                                <h3>智能推荐</h3>
+                                <p>自然语言输入，AI智能匹配传感器组合方案</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">📋</div>
+                            <div class="feature-text">
+                                <h3>方案详情</h3>
+                                <p>传感器型号、参数、价格、供应商联系方式</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">💡</div>
+                            <div class="feature-text">
+                                <h3>选型解析</h3>
+                                <p>推荐理由、对标分析、选型逻辑说明</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">🧪</div>
+                            <div class="feature-text">
+                                <h3>测试建议</h3>
+                                <p>测试项、参考标准、测试设备建议</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">📦</div>
+                            <div class="feature-text">
+                                <h3>采购指导</h3>
+                                <p>供应商联系、样片申请、客户案例</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-text">
+                                <h3>实时检索</h3>
+                                <p>最新价格、中标公告、行业新闻</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 用户功能 -->
+            <div class="slide" :class="{active: currentSlide === 3}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">👤 用户功能</h2>
+                    <div class="user-features">
+                        <div class="user-feature-card">
+                            <div class="user-feature-icon">➕</div>
+                            <h3 class="user-feature-title">自定义数据</h3>
+                            <p class="user-feature-desc">支持用户导入自定义传感器、供应商、客户数据，打造个性化知识库</p>
+                        </div>
+                        <div class="user-feature-card">
+                            <div class="user-feature-icon">📜</div>
+                            <h3 class="user-feature-title">历史记录</h3>
+                            <p class="user-feature-desc">自动保存搜索历史，快速查看历史方案，支持一键重新搜索</p>
+                        </div>
+                        <div class="user-feature-card">
+                            <div class="user-feature-icon">📤</div>
+                            <h3 class="user-feature-title">导出功能</h3>
+                            <p class="user-feature-desc">支持JSON、CSV、TXT格式导出推荐方案，方便汇报和存档</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 技术架构 -->
+            <div class="slide" :class="{active: currentSlide === 4}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">🔧 技术架构</h2>
+                    <div class="tech-stack">
+                        <div class="tech-item">
+                            <div class="tech-icon">🎨</div>
+                            <div class="tech-name">Vue 3 前端</div>
+                            <div class="tech-desc">单HTML文件</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">⚙️</div>
+                            <div class="tech-name">Python Flask</div>
+                            <div class="tech-desc">轻量后端</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🗄️</div>
+                            <div class="tech-name">JSON 数据</div>
+                            <div class="tech-desc">本地知识库</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🤖</div>
+                            <div class="tech-name">DeepSeek API</div>
+                            <div class="tech-desc">智能信息提取</div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🔍</div>
+                            <div class="tech-name">Bing/DDG</div>
+                            <div class="tech-desc">实时搜索</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 产品演示 -->
+            <div class="slide" :class="{active: currentSlide === 5}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">🖥️ 产品演示</h2>
+                    <div class="demo-container">
+                        <div class="demo-header">
+                            <div class="demo-dot red"></div>
+                            <div class="demo-dot yellow"></div>
+                            <div class="demo-dot green"></div>
+                        </div>
+                        <div class="demo-content">
+                            <div class="demo-search">
+                                <input type="text" class="demo-input" placeholder="描述您的传感器需求..." value="草莓采摘机器人需要判断成熟度">
+                                <button class="demo-btn">🚀 智能推荐</button>
+                            </div>
+                            <div class="demo-results">
+                                <div class="demo-card">
+                                    <div style="font-size:14px;color:var(--primary-cyan);margin-bottom:15px;">✨ 推荐方案</div>
+                                    <div style="font-size:16px;font-weight:600;margin-bottom:15px;">草莓采摘机器人成熟度检测方案</div>
+                                    <div style="display:flex;gap:10px;margin-bottom:15px;">
+                                        <span style="padding:5px 12px;background:rgba(0,217,255,0.1);border-radius:6px;font-size:12px;">👁️ 华测 M620</span>
+                                        <span style="padding:5px 12px;background:rgba(168,85,247,0.1);border-radius:6px;font-size:12px;">✋ 天羿 EAM1011</span>
+                                    </div>
+                                    <div style="font-size:13px;color:rgba(255,255,255,0.6);">💡 选型解析：视觉+触觉融合方案</div>
+                                </div>
+                                <div class="demo-sidebar">
+                                    <div style="font-size:14px;color:var(--primary-cyan);margin-bottom:15px;">⚡ 实时动态</div>
+                                    <div style="font-size:12px;margin-bottom:10px;">💰 价格变动</div>
+                                    <div style="font-size:12px;margin-bottom:8px;">华测 M620: ¥999</div>
+                                    <div style="font-size:12px;margin-bottom:10px;">� 中标公告</div>
+                                    <div style="font-size:12px;">某省农业厅采购200套</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 数据规模 -->
+            <div class="slide" :class="{active: currentSlide === 6}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">📊 数据规模</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">10+</div>
+                            <div class="stat-label">传感器型号</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">5+</div>
+                            <div class="stat-label">应用场景</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">8+</div>
+                            <div class="stat-label">供应商</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">5+</div>
+                            <div class="stat-label">测试标准</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 商业模式 -->
+            <div class="slide" :class="{active: currentSlide === 7}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">💰 商业模式</h2>
+                    <div class="biz-models">
+                        <div class="biz-card">
+                            <div class="biz-icon">☁️</div>
+                            <div class="biz-content">
+                                <h3>SaaS 订阅服务</h3>
+                                <p>提供云端版本，按月/年订阅，包含更多传感器数据、高级分析功能、团队协作</p>
+                            </div>
+                        </div>
+                        <div class="biz-card">
+                            <div class="biz-icon">�</div>
+                            <div class="biz-content">
+                                <h3>定制化开发</h3>
+                                <p>为企业客户提供传感器知识库定制、选型算法优化、系统集成服务</p>
+                            </div>
+                        </div>
+                        <div class="biz-card">
+                            <div class="biz-icon">📊</div>
+                            <div class="biz-content">
+                                <h3>数据服务</h3>
+                                <p>传感器行业数据报告、市场分析、趋势预测等增值数据服务</p>
+                            </div>
+                        </div>
+                        <div class="biz-card">
+                            <div class="biz-icon">🎓</div>
+                            <div class="biz-content">
+                                <h3>教育版/实验室版</h3>
+                                <p>面向高校和科研机构，提供教育优惠和定制化培训服务</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 团队 -->
+            <div class="slide" :class="{active: currentSlide === 8}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">👥 核心团队</h2>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <div class="team-avatar">👨‍💻</div>
+                            <div class="team-name">创始人</div>
+                            <div class="team-role">产品与技术负责人</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-avatar">👩‍🔬</div>
+                            <div class="team-name">农业专家</div>
+                            <div class="team-role">行业顾问</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-avatar">👨‍�</div>
+                            <div class="team-name">算法工程师</div>
+                            <div class="team-role">AI 模型开发</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-avatar">👩‍💼</div>
+                            <div class="team-name">商务拓展</div>
+                            <div class="team-role">市场与销售</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 发展路线 -->
+            <div class="slide" :class="{active: currentSlide === 9}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content">
+                    <h2 class="slide-title">🗺️ 发展路线</h2>
+                    <div class="roadmap">
+                        <div class="roadmap-item">
+                            <div class="roadmap-icon">🎯</div>
+                            <div class="roadmap-title">V1.0</div>
+                            <div class="roadmap-desc">基础版发布，核心选型功能</div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-icon">🚀</div>
+                            <div class="roadmap-title">V2.0</div>
+                            <div class="roadmap-desc">增加实时检索，行业数据接入</div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-icon">🌐</div>
+                            <div class="roadmap-title">V3.0</div>
+                            <div class="roadmap-desc">多语言支持，海外市场拓展</div>
+                        </div>
+                        <div class="roadmap-item">
+                            <div class="roadmap-icon">🤖</div>
+                            <div class="roadmap-title">V4.0</div>
+                            <div class="roadmap-desc">AI Agent，全自动化选型</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 结束页 -->
+            <div class="slide" :class="{active: currentSlide === 10}">
+                <div class="bg-gradient"></div>
+                <div class="slide-content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                    <h2 class="end-title">感谢关注</h2>
+                    <p class="end-subtitle">让传感器选型变得更简单</p>
+                    <div class="contact-info">
+                        <div class="contact-item">📧 info@guoganzhi.com</div>
+                        <div class="contact-item">🌐 guoganzhi.com</div>
+                        <div class="contact-item">📱 扫码咨询</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- 导航 -->
+        <div class="nav-dots">
+            <div class="nav-dot" v-for="(dot, idx) in 11" :key="idx" :class="{active: currentSlide === idx}" @click="goToSlide(idx)"></div>
+        </div>
+        
+        <div class="nav-arrows">
+            <div class="nav-arrow" @click="prevSlide">←</div>
+            <div class="nav-arrow" @click="nextSlide">→</div>
+        </div>
+        
+        <div class="slide-number">{{ currentSlide + 1 }} / 11</div>
+    </div>
+    
+    <script>
+        const { createApp, ref, onMounted, onUnmounted } = Vue;
+        
+        createApp({
+            setup() {
+                const currentSlide = ref(0);
+                const totalSlides = 11;
+                
+                const nextSlide = () => {
+                    if (currentSlide.value < totalSlides - 1) {
+                        currentSlide.value++;
+                    }
+                };
+                
+                const prevSlide = () => {
+                    if (currentSlide.value > 0) {
+                        currentSlide.value--;
+                    }
+                };
+                
+                const goToSlide = (idx) => {
+                    currentSlide.value = idx;
+                };
+                
+                const handleKeydown = (e) => {
+                    if (e.key === 'ArrowRight' || e.key === ' ') {
+                        nextSlide();
+                    } else if (e.key === 'ArrowLeft') {
+                        prevSlide();
+                    }
+                };
+                
+                onMounted(() => {
+                    window.addEventListener('keydown', handleKeydown);
+                });
+                
+                onUnmounted(() => {
+                    window.removeEventListener('keydown', handleKeydown);
+                });
+                
+                return {
+                    currentSlide,
+                    nextSlide,
+                    prevSlide,
+                    goToSlide
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
