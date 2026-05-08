@@ -13,7 +13,7 @@ CORS(app)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-a648b2d898ba49babbe21a2b93053f5d")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 BING_API_KEY = os.environ.get("BING_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 

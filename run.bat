@@ -5,11 +5,9 @@ echo 果感知·智选助手 - 启动脚本
 echo ================================================
 echo.
 
-echo [1/3] 设置环境变量...
-set DEEPSEEK_API_KEY=sk-a648b2d898ba49babbe21a2b93053f5d
-set BING_API_KEY=
-echo   DEEPSEEK_API_KEY: 已设置
-echo   BING_API_KEY: %BING_API_KEY%
+echo [1/3] 请确保环境变量已设置...
+echo   提示: 请先执行 set DEEPSEEK_API_KEY=你的密钥
+echo   当前 DEEPSEEK_API_KEY: %DEEPSEEK_API_KEY%
 echo.
 
 echo [2/3] 安装依赖...

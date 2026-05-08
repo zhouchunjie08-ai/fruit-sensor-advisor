@@ -2427,7 +2427,7 @@
                 
                 const runExplore = async () => {
                     try {
-                        const response = await axios.get('http://localhost:5000/api/sensors');
+                        const response = await axios.get('/api/sensors');
                         let results = response.data.data || [];
                         
                         if (exploreFilters.value.types.length > 0) {
@@ -2580,7 +2580,7 @@
                     };
                     
                     try {
-                        const response = await axios.post('http://localhost:5000/api/recommend', {
+                        const response = await axios.post('/api/recommend', {
                             query: searchQuery.value
                         });
                         
